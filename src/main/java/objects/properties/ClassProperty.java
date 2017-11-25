@@ -1,5 +1,6 @@
-package objects;
+package objects.properties;
 
+import objects.MemoryManagedObject;
 import org.apache.commons.lang3.SerializationUtils;
 
 public class ClassProperty<T> extends Property<Class<? extends T>> {

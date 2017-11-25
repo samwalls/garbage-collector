@@ -1,6 +1,6 @@
 package objects.episcopal;
 
-import objects.DoubleProperty;
+import objects.properties.DoubleProperty;
 import objects.NullHeapException;
 
 public class Double extends EpiscopalObject {

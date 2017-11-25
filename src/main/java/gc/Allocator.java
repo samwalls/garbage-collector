@@ -1,6 +1,5 @@
 package gc;
 
-import objects.FreeRegion;
 import objects.MemoryManagedObject;
 
 import java.util.HashSet;

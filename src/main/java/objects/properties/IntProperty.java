@@ -1,4 +1,4 @@
-package objects;
+package objects.properties;
 
 public class IntProperty extends Property<Integer> {
 

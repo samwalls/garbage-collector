@@ -1,6 +1,7 @@
 package objects;
 
 import gc.Heap;
+import objects.properties.Property;
 
 import java.util.HashMap;
 import java.util.Map;

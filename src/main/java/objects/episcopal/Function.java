@@ -1,7 +1,7 @@
 package objects.episcopal;
 
-import objects.ClassProperty;
-import objects.IntProperty;
+import objects.properties.ClassProperty;
+import objects.properties.IntProperty;
 import objects.NullHeapException;
 import objects.episcopal.representations.ClosureRepresentation;
 

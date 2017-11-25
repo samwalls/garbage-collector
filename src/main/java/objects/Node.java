@@ -1,6 +1,7 @@
 package objects;
 
 import objects.episcopal.EpiscopalObject;
+import objects.properties.IntProperty;
 
 public class Node<T extends EpiscopalObject> extends MemoryManagedObject {
 

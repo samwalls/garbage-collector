@@ -1,4 +1,4 @@
-package objects;
+package objects.properties;
 
 public class DoubleProperty extends Property<Double> {
 

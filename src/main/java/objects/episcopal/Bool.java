@@ -1,6 +1,6 @@
 package objects.episcopal;
 
-import objects.IntProperty;
+import objects.properties.IntProperty;
 import objects.NullHeapException;
 
 public class Bool extends EpiscopalObject {

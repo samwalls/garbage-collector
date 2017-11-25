@@ -1,4 +1,4 @@
-package objects;
+package gc;
 
 public class FreeRegion {
 
