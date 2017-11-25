@@ -31,6 +31,10 @@ public class MemoryManagedObject implements Sizeable {
         this.properties = new HashMap<>();
     }
 
+    public MemoryManagedObject() {
+        this(0);
+    }
+
     public int size() {
         return nextRelativePropertyAddress;
     }
@@ -55,12 +59,14 @@ public class MemoryManagedObject implements Sizeable {
         this.address = address;
     }
 
-    protected long[] readForProperty(Property property) {
+    protected long[] readForProperty(Property property) throws NullHeapException {
+        checkHeap(property);
         int absolute = address + relativePropertyAddress(property);
         return heap.get(absolute, property.size());
     }
 
-    protected <T> void writeForProperty(Property<T> property, long[] data) {
+    protected <T> void writeForProperty(Property<T> property, long[] data) throws NullHeapException {
+        checkHeap(property);
         int absolute = address + relativePropertyAddress(property);
         heap.put(absolute, data);
     }
@@ -78,5 +84,10 @@ public class MemoryManagedObject implements Sizeable {
         if (!properties.containsKey(p))
             throw new PropertyNotFoundException("property \"" + p.toString() + "\" does not exist");
         return properties.get(p);
+    }
+
+    private void checkHeap(Property p) throws NullHeapException {
+        if (heap == null)
+            throw new NullHeapException("memory managed object \"" + this.toString() + "\" is not associated with a heap to view property \"" + p.toString() + "\"");
     }
 }

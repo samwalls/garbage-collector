@@ -25,4 +25,8 @@ public class Heap {
     public long get(int address) {
         return memory[address];
     }
+
+    public int getSize() {
+        return memory.length;
+    }
 }

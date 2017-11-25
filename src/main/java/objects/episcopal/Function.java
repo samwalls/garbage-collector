@@ -2,6 +2,7 @@ package objects.episcopal;
 
 import objects.ClassProperty;
 import objects.IntProperty;
+import objects.NullHeapException;
 import objects.episcopal.representations.ClosureRepresentation;
 
 public class Function extends EpiscopalObject {
@@ -10,8 +11,8 @@ public class Function extends EpiscopalObject {
     private static final IntProperty nParamsProperty = new IntProperty();
     private IntProperty[] paramProperties;
 
-    public Function(int address, final Class<? extends ClosureRepresentation> clazz, int nParams) {
-        super(address);
+    public Function(final Class<? extends ClosureRepresentation> clazz, int nParams) {
+        super();
         closureClassProperty = new ClassProperty<>(clazz);
         paramProperties = new IntProperty[nParams];
         addProperty(closureClassProperty);
@@ -22,23 +23,23 @@ public class Function extends EpiscopalObject {
         }
     }
 
-    public Class<? extends ClosureRepresentation> getClosure() {
+    public Class<? extends ClosureRepresentation> getClosure() throws NullHeapException {
         return closureClassProperty.unmarshall(readForProperty(closureClassProperty));
     }
 
-    public Integer getNParams() {
+    public Integer getNParams() throws NullHeapException {
         return nParamsProperty.unmarshall(readForProperty(nParamsProperty));
     }
 
-    private void setNParams(Integer nParams) {
+    private void setNParams(Integer nParams) throws NullHeapException {
         writeForProperty(nParamsProperty, nParamsProperty.marshall(nParams));
     }
 
-    public Integer getParamAddress(int param) {
+    public Integer getParamAddress(int param) throws NullHeapException {
         return paramProperties[param].unmarshall(readForProperty(paramProperties[param]));
     }
 
-    public void setParamAddress(int param, Integer address) {
+    public void setParamAddress(int param, Integer address) throws NullHeapException {
         writeForProperty(paramProperties[param], paramProperties[param].marshall(address));
     }
 }

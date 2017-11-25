@@ -2,6 +2,7 @@ package objects.episcopal;
 
 import objects.ClassProperty;
 import objects.IntProperty;
+import objects.NullHeapException;
 import objects.episcopal.representations.DistributionRepresentation;
 
 public class Distrib extends EpiscopalObject {
@@ -10,8 +11,8 @@ public class Distrib extends EpiscopalObject {
     private static final IntProperty nElementsProperty = new IntProperty();
     private final IntProperty[] elementProperties;
 
-    public Distrib(int address, final Class<? extends DistributionRepresentation> clazz, int nElements) {
-        super(address);
+    public Distrib(final Class<? extends DistributionRepresentation> clazz, int nElements) {
+        super();
         distributionTypeProperty = new ClassProperty<>(clazz);
         elementProperties = new IntProperty[nElements];
         addProperty(distributionTypeProperty);
@@ -22,19 +23,19 @@ public class Distrib extends EpiscopalObject {
         }
     }
 
-    public Class<? extends DistributionRepresentation> getDistribType() {
+    public Class<? extends DistributionRepresentation> getDistribType() throws NullHeapException {
         return distributionTypeProperty.unmarshall(readForProperty(distributionTypeProperty));
     }
 
-    public Integer getNElements() {
+    public Integer getNElements() throws NullHeapException {
         return nElementsProperty.unmarshall(readForProperty(nElementsProperty));
     }
 
-    public Integer getElementAddress(int i) {
+    public Integer getElementAddress(int i) throws NullHeapException {
         return elementProperties[i].unmarshall(readForProperty(elementProperties[i]));
     }
 
-    public void setElementAddress(int i, Integer address) {
+    public void setElementAddress(int i, Integer address) throws NullHeapException {
         writeForProperty(elementProperties[i], elementProperties[i].marshall(address));
     }
 }

@@ -1,22 +1,22 @@
 package objects.episcopal;
 
 import objects.IntProperty;
+import objects.NullHeapException;
 
 public class Bool extends EpiscopalObject {
 
     private static final IntProperty valueProperty = new IntProperty();
 
-    public Bool(int address) {
-        super(address);
+    public Bool() {
+        super();
         addProperty(valueProperty);
     }
 
-    public Boolean getValue() {
-        Integer v = valueProperty.unmarshall(readForProperty(valueProperty));
-        return v == 1;
+    public boolean getValue() throws NullHeapException {
+        return valueProperty.unmarshall(readForProperty(valueProperty)) == 1;
     }
 
-    public void setValue(Boolean v) {
+    public void setValue(boolean v) throws NullHeapException {
         writeForProperty(valueProperty, valueProperty.marshall(v ? 1 : 0));
     }
 }
