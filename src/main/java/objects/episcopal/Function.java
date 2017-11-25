@@ -25,6 +25,11 @@ public class Function<T extends ClosureRepresentation> extends EpiscopalObject {
         }
     }
 
+    @Override
+    public void onAllocate() throws NullHeapException {
+        writeForProperty(closureClassProperty, closureClassProperty.marshall(closureClass));
+    }
+
     public Class<? extends ClosureRepresentation> getClosure() throws NullHeapException {
         return closureClassProperty.unmarshall(readForProperty(closureClassProperty));
     }
