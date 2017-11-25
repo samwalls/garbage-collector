@@ -3,7 +3,10 @@ package gc;
 import static org.junit.Assert.*;
 
 import objects.NullHeapException;
+import objects.episcopal.Distrib;
 import objects.episcopal.Int;
+import objects.episcopal.representations.ClosureRepresentation;
+import objects.episcopal.representations.DistributionRepresentation;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,5 +82,40 @@ public class AllocatorTest {
         } catch (NullHeapException e) {
             // we expect this, do nothing...
         }
+    }
+
+    @Test
+    public void testAllocationIntoFreeRegionWithExactSpace() throws OutOfMemoryException, NullHeapException {
+        Int a = new Int();
+        allocator.allocate(a);
+        a.setValue(42);
+        int freeRegionsBefore = allocator.freeRegions();
+        allocator.free(a);
+        int freeRegionsAfter = allocator.freeRegions();
+        assertEquals("expected free regions to increase by one after freeing allocated object", freeRegionsAfter, freeRegionsBefore + 1);
+        freeRegionsBefore = freeRegionsAfter;
+        allocator.allocate(a);
+        freeRegionsAfter = allocator.freeRegions();
+        assertEquals("expected free regions to decrease by one after allocating object with enough space to occupy it completely", freeRegionsAfter, freeRegionsBefore - 1);
+    }
+
+    @Test
+    public void testAllocationIntoFreeRegionWithMoreSpace() throws OutOfMemoryException, NullHeapException {
+        Distrib distrib = new Distrib(DistributionRepresentation.class, 5);
+        Int integer = new Int();
+        assertTrue("distribution object with 5 elements should take more space than a single integer", distrib.size() > integer.size());
+        allocator.allocate(distrib);
+        int freeRegionsBefore = allocator.freeRegions();
+        allocator.free(distrib);
+        int freeRegionsAfter = allocator.freeRegions();
+        assertEquals("expected free regions to increase by one after freeing allocated object", freeRegionsAfter, freeRegionsBefore + 1);
+        freeRegionsBefore = freeRegionsAfter;
+        allocator.allocate(integer);
+        freeRegionsAfter = allocator.freeRegions();
+        assertEquals("expected there to be same number of free regions after allocating into a free region with supplementary space", freeRegionsAfter, freeRegionsBefore);
+        freeRegionsBefore = freeRegionsAfter;
+        allocator.free(integer);
+        freeRegionsAfter = allocator.freeRegions();
+        assertEquals("expected there to be more free regions after freeing an object which divided a free region through allocation", freeRegionsAfter, freeRegionsBefore + 1);
     }
 }
