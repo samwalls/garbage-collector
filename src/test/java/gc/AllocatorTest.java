@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import objects.NullHeapException;
 import objects.episcopal.Distrib;
 import objects.episcopal.Int;
-import objects.episcopal.representations.ClosureRepresentation;
 import objects.episcopal.representations.DistributionRepresentation;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +26,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testBasicAllocation() throws OutOfMemoryException, NullHeapException {
+    public void testBasicAllocation() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         int freeBefore = allocator.freeSpace();
         allocator.allocate(a);
@@ -38,7 +37,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testBasicAllocationAndFree() throws OutOfMemoryException, NullHeapException {
+    public void testBasicAllocationAndFree() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         int freeBefore = allocator.freeSpace();
         allocator.allocate(a);
@@ -55,7 +54,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testValueGetAfterFree() throws OutOfMemoryException, NullHeapException {
+    public void testValueGetAfterFree() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
         a.setValue(42);
@@ -70,7 +69,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testValueSetAfterFree() throws OutOfMemoryException, NullHeapException {
+    public void testValueSetAfterFree() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
         a.setValue(42);
@@ -85,7 +84,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testAllocationIntoFreeRegionWithExactSpace() throws OutOfMemoryException, NullHeapException {
+    public void testAllocationIntoFreeRegionWithExactSpace() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
         a.setValue(42);
@@ -100,8 +99,8 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testAllocationIntoFreeRegionWithMoreSpace() throws OutOfMemoryException, NullHeapException {
-        Distrib distrib = new Distrib(DistributionRepresentation.class, 5);
+    public void testAllocationIntoFreeRegionWithMoreSpace() throws OutOfMemoryException, NullHeapException, AllocationException {
+        Distrib<DistributionRepresentation> distrib = new Distrib<>(DistributionRepresentation.class, 5);
         Int integer = new Int();
         assertTrue("distribution object with 5 elements should take more space than a single integer", distrib.size() > integer.size());
         allocator.allocate(distrib);

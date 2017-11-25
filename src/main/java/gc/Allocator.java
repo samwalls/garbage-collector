@@ -1,6 +1,7 @@
 package gc;
 
 import objects.MemoryManagedObject;
+import objects.NullHeapException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class Allocator {
         freeRoot = new FreeRegion(0, heap.getSize(), null);
     }
 
-    public void allocate(MemoryManagedObject object) throws OutOfMemoryException {
+    public void allocate(MemoryManagedObject object) throws OutOfMemoryException, AllocationException {
         // TODO free region coalescing
         // find the first free region with enough space to allocate the object
         FreeRegion previous = null, current = freeRoot;
@@ -48,6 +49,12 @@ public class Allocator {
         }
         object.setHeap(heap);
         objects.add(object);
+        // perform onAllocate behaviour if present
+        try {
+            object.onAllocate();
+        } catch (NullHeapException e) {
+            throw new AllocationException(e);
+        }
     }
 
     public void free(MemoryManagedObject object) {

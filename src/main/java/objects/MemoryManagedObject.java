@@ -36,6 +36,12 @@ public class MemoryManagedObject implements Sizeable {
         this(0);
     }
 
+    /**
+     * Behaviour which is inserted directly after allocation. Useful to insert marshalling behaviour of constants
+     * (cannot be reset after allocation).
+     */
+    public void onAllocate() throws NullHeapException { }
+
     public int size() {
         return nextRelativePropertyAddress;
     }

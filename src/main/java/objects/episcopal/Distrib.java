@@ -5,15 +5,17 @@ import objects.properties.IntProperty;
 import objects.NullHeapException;
 import objects.episcopal.representations.DistributionRepresentation;
 
-public class Distrib extends EpiscopalObject {
+public class Distrib<T extends DistributionRepresentation> extends EpiscopalObject {
 
-    private final ClassProperty<DistributionRepresentation> distributionTypeProperty;
+    private final Class<T> distributionClass;
+    private final ClassProperty<T> distributionTypeProperty;
     private static final IntProperty nElementsProperty = new IntProperty();
     private final IntProperty[] elementProperties;
 
-    public Distrib(final Class<? extends DistributionRepresentation> clazz, int nElements) {
+    public Distrib(final Class<T> distributionClass, int nElements) {
         super();
-        distributionTypeProperty = new ClassProperty<>(clazz);
+        this.distributionClass = distributionClass;
+        distributionTypeProperty = new ClassProperty<>(distributionClass);
         elementProperties = new IntProperty[nElements];
         addProperty(distributionTypeProperty);
         addProperty(nElementsProperty);
@@ -23,19 +25,25 @@ public class Distrib extends EpiscopalObject {
         }
     }
 
+    @Override
+    public void onAllocate() throws NullHeapException {
+        // write the class specification to the heap
+        writeForProperty(distributionTypeProperty, distributionTypeProperty.marshall(distributionClass));
+    }
+
     public Class<? extends DistributionRepresentation> getDistribType() throws NullHeapException {
         return distributionTypeProperty.unmarshall(readForProperty(distributionTypeProperty));
     }
 
-    public Integer getNElements() throws NullHeapException {
+    public int getNElements() throws NullHeapException {
         return nElementsProperty.unmarshall(readForProperty(nElementsProperty));
     }
 
-    public Integer getElementAddress(int i) throws NullHeapException {
+    public int getElementAddress(int i) throws NullHeapException {
         return elementProperties[i].unmarshall(readForProperty(elementProperties[i]));
     }
 
-    public void setElementAddress(int i, Integer address) throws NullHeapException {
+    public void setElementAddress(int i, int address) throws NullHeapException {
         writeForProperty(elementProperties[i], elementProperties[i].marshall(address));
     }
 }

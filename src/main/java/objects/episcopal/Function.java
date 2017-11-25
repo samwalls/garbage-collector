@@ -5,15 +5,17 @@ import objects.properties.IntProperty;
 import objects.NullHeapException;
 import objects.episcopal.representations.ClosureRepresentation;
 
-public class Function extends EpiscopalObject {
+public class Function<T extends ClosureRepresentation> extends EpiscopalObject {
 
-    private final ClassProperty<ClosureRepresentation> closureClassProperty;
+    private final Class<T> closureClass;
+    private final ClassProperty<T> closureClassProperty;
     private static final IntProperty nParamsProperty = new IntProperty();
     private IntProperty[] paramProperties;
 
-    public Function(final Class<? extends ClosureRepresentation> clazz, int nParams) {
+    public Function(final Class<T> closureClass, int nParams) {
         super();
-        closureClassProperty = new ClassProperty<>(clazz);
+        this.closureClass = closureClass;
+        closureClassProperty = new ClassProperty<>(closureClass);
         paramProperties = new IntProperty[nParams];
         addProperty(closureClassProperty);
         addProperty(nParamsProperty);
@@ -27,19 +29,19 @@ public class Function extends EpiscopalObject {
         return closureClassProperty.unmarshall(readForProperty(closureClassProperty));
     }
 
-    public Integer getNParams() throws NullHeapException {
+    public int getNParams() throws NullHeapException {
         return nParamsProperty.unmarshall(readForProperty(nParamsProperty));
     }
 
-    private void setNParams(Integer nParams) throws NullHeapException {
+    private void setNParams(int nParams) throws NullHeapException {
         writeForProperty(nParamsProperty, nParamsProperty.marshall(nParams));
     }
 
-    public Integer getParamAddress(int param) throws NullHeapException {
+    public int getParamAddress(int param) throws NullHeapException {
         return paramProperties[param].unmarshall(readForProperty(paramProperties[param]));
     }
 
-    public void setParamAddress(int param, Integer address) throws NullHeapException {
+    public void setParamAddress(int param, int address) throws NullHeapException {
         writeForProperty(paramProperties[param], paramProperties[param].marshall(address));
     }
 }
