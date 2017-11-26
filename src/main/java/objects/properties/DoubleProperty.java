@@ -1,5 +1,7 @@
 package objects.properties;
 
+import objects.managed.Property;
+
 public class DoubleProperty extends Property<Double> {
 
     @Override

@@ -1,7 +1,7 @@
 package gc;
 
-import objects.MemoryManagedObject;
-import objects.NullHeapException;
+import objects.managed.MemoryManagedObject;
+import objects.managed.PropertyAccessException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -52,7 +52,7 @@ public class Allocator {
         // perform onAllocate behaviour if present
         try {
             object.onAllocate();
-        } catch (NullHeapException e) {
+        } catch (PropertyAccessException e) {
             throw new AllocationException(e);
         }
     }

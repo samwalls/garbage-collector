@@ -1,9 +1,10 @@
 package objects.properties;
 
-import objects.MemoryManagedObject;
+import objects.managed.MemoryManagedObject;
+import objects.managed.ReadOnlyProperty;
 import org.apache.commons.lang3.SerializationUtils;
 
-public class ClassProperty<T> extends Property<Class<? extends T>> {
+public class ClassProperty<T> extends ReadOnlyProperty<Class<? extends T>> {
 
     private final Class<? extends T> clazz;
 
@@ -11,9 +12,10 @@ public class ClassProperty<T> extends Property<Class<? extends T>> {
     private long[] cache = null;
 
     /**
-     * @param clazz The class to use as a closure representation, cannot be changed after the fact as the size must
-     *              remain constant. If one requires the class value to change then one will have to create a new
-     *              {@link MemoryManagedObject} somewhere else containing the new class property.
+     * @param clazz The class to represent. This cannot be changed after the fact as the size must remain constant. As
+     *              such, {@link ClassProperty} is a {@link ReadOnlyProperty}. If one requires the class value to change
+     *              then one will have to create a new {@link MemoryManagedObject} somewhere else containing the new
+     *              class property.
      */
     public ClassProperty(final Class<? extends T> clazz) {
         this.clazz = clazz;

@@ -1,54 +1,40 @@
 package objects;
 
 import objects.episcopal.EpiscopalObject;
+import objects.managed.MemoryManagedObject;
+import objects.managed.PropertyAccessException;
 import objects.properties.IntProperty;
 
 public class Node<T extends EpiscopalObject> extends MemoryManagedObject {
 
     private static final NodeType[] nodeTypes = NodeType.values();
 
-    private static final IntProperty typeProperty = new IntProperty();
-    private static final IntProperty prevProperty = new IntProperty();
-    private static final IntProperty nextProperty = new IntProperty();
-    private static final IntProperty dataAddressProperty = new IntProperty();
+    // keep an instance of the T type so that we can use it from a list of nodes
+    private T instance;
 
-    public Node() {
+    private final IntProperty type = new IntProperty();
+    public final IntProperty prev = new IntProperty();
+    public final IntProperty next = new IntProperty();
+    public final IntProperty dataAddress = new IntProperty();
+
+    public Node(T instance) {
         super();
-        addProperty(typeProperty);
-        addProperty(prevProperty);
-        addProperty(nextProperty);
-        addProperty(dataAddressProperty);
+        this.instance = instance;
+        addProperty(type);
+        addProperty(prev);
+        addProperty(next);
+        addProperty(dataAddress);
     }
 
-    public int getDataAddress() throws NullHeapException {
-        return dataAddressProperty.unmarshall(readForProperty(dataAddressProperty));
+    public T getInstance() {
+        return instance;
     }
 
-    public void setDataAddress(int address) throws NullHeapException {
-        writeForProperty(dataAddressProperty, dataAddressProperty.marshall(address));
+    public NodeType type() throws PropertyAccessException {
+        return nodeTypes[type.get()];
     }
 
-    public NodeType getType() throws NullHeapException {
-        return nodeTypes[typeProperty.unmarshall(readForProperty(typeProperty))];
-    }
-
-    public Node getPrev() throws NullHeapException {
-        Node n = new Node();
-        n.setAddress(prevProperty.unmarshall(readForProperty(prevProperty)));
-        return n;
-    }
-
-    public void setPrev(Node prev) {
-        prevProperty.marshall(prev.getAddress());
-    }
-
-    public Node getNext() throws NullHeapException {
-        Node n = new Node();
-        n.setAddress(nextProperty.unmarshall(readForProperty(nextProperty)));
-        return n;
-    }
-
-    public void setNext(Node prev) {
-        nextProperty.marshall(prev.getAddress());
+    public void setType(NodeType nodeType) throws PropertyAccessException {
+        type.set(nodeType.ordinal());
     }
 }

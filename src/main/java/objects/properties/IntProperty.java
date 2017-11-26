@@ -1,5 +1,7 @@
 package objects.properties;
 
+import objects.managed.Property;
+
 public class IntProperty extends Property<Integer> {
 
     @Override

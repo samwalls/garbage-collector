@@ -1,12 +1,12 @@
-package objects;
+package objects.managed;
 
 import gc.Heap;
-import objects.properties.Property;
+import objects.Sizeable;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MemoryManagedObject implements Sizeable {
+public abstract class MemoryManagedObject implements Sizeable {
 
     private Heap heap;
 
@@ -24,12 +24,16 @@ public class MemoryManagedObject implements Sizeable {
     /**
      * A map from property to an address relative to this object
      */
-    private Map<Property, Integer> properties;
+    private List<GeneralProperty> properties;
 
     public MemoryManagedObject(int address) {
         this.address = address;
         this.nextRelativePropertyAddress = 0;
-        this.properties = new HashMap<>();
+        this.properties = new ArrayList<>();
+    }
+
+    public MemoryManagedObject(Integer address) {
+        this(address.intValue());
     }
 
     public MemoryManagedObject() {
@@ -40,7 +44,7 @@ public class MemoryManagedObject implements Sizeable {
      * Behaviour which is inserted directly after allocation. Useful to insert marshalling behaviour of constants
      * (cannot be reset after allocation).
      */
-    public void onAllocate() throws NullHeapException { }
+    public void onAllocate() throws PropertyAccessException { }
 
     public int size() {
         return nextRelativePropertyAddress;
@@ -66,34 +70,36 @@ public class MemoryManagedObject implements Sizeable {
         this.address = address;
     }
 
-    protected long[] readForProperty(Property property) throws NullHeapException {
-        checkHeap(property);
-        int absolute = address + relativePropertyAddress(property);
-        return heap.get(absolute, property.size());
+    protected <T> T get(GeneralProperty<T> property) throws NullHeapException {
+        return property.unmarshall(readForProperty(property));
     }
 
-    protected <T> void writeForProperty(Property<T> property, long[] data) throws NullHeapException {
-        checkHeap(property);
-        int absolute = address + relativePropertyAddress(property);
-        heap.put(absolute, data);
+    protected <T> void set(GeneralProperty<T> property, T value) throws NullHeapException {
+        writeForProperty(property, property.marshall(value));
     }
 
-    protected void addProperty(Property property) {
-        if (properties.containsKey(property))
+    protected void addProperty(GeneralProperty property) {
+        if (properties.contains(property))
             throw new RuntimeException("property \"" + property.toString() + "\" already exists");
-        properties.put(property, nextRelativePropertyAddress);
+        property.setRelativeAddress(nextRelativePropertyAddress);
+        properties.add(property);
+        property.setParent(this);
         nextRelativePropertyAddress += property.size();
     }
 
-    protected int relativePropertyAddress(Property p) {
-        if (p == null)
-            throw new PropertyNotFoundException("cannot use null property");
-        if (!properties.containsKey(p))
-            throw new PropertyNotFoundException("property \"" + p.toString() + "\" does not exist");
-        return properties.get(p);
+    private long[] readForProperty(GeneralProperty property) throws NullHeapException {
+        checkHeap(property);
+        int absolute = address + property.getRelativeAddress();
+        return heap.get(absolute, property.size());
     }
 
-    private void checkHeap(Property p) throws NullHeapException {
+    private void writeForProperty(GeneralProperty property, long[] data) throws NullHeapException {
+        checkHeap(property);
+        int absolute = address + property.getRelativeAddress();
+        heap.put(absolute, data);
+    }
+
+    private void checkHeap(GeneralProperty p) throws NullHeapException {
         if (heap == null)
             throw new NullHeapException("memory managed object \"" + this.toString() + "\" is not associated with a heap to view property \"" + p.toString() + "\"");
     }

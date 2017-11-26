@@ -2,7 +2,7 @@ package gc;
 
 import static org.junit.Assert.*;
 
-import objects.NullHeapException;
+import objects.managed.NullHeapException;
 import objects.episcopal.Distrib;
 import objects.episcopal.Int;
 import objects.episcopal.representations.DistributionRepresentation;
@@ -31,9 +31,9 @@ public class AllocatorTest {
         int freeBefore = allocator.freeSpace();
         allocator.allocate(a);
         int freeAfter = allocator.freeSpace();
-        a.setValue(10);
+        a.value.set(10);
         assertEquals(a.size(), freeBefore - freeAfter);
-        assertEquals(10, a.getValue());
+        assertEquals(10, a.value.get().intValue());
     }
 
     @Test
@@ -42,7 +42,7 @@ public class AllocatorTest {
         int freeBefore = allocator.freeSpace();
         allocator.allocate(a);
         int freeAfter = allocator.freeSpace();
-        a.setValue(10);
+        a.value.set(10);
         assertEquals(a.size(), freeBefore - freeAfter);
         int freeRegions = allocator.freeRegions();
         freeBefore = allocator.freeSpace();
@@ -57,11 +57,11 @@ public class AllocatorTest {
     public void testValueGetAfterFree() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
-        a.setValue(42);
-        assertEquals(42, a.getValue());
+        a.value.set(42);
+        assertEquals(42, a.value.get().intValue());
         allocator.free(a);
         try {
-            assertEquals(0, a.getValue());
+            assertEquals(0, a.value.get().intValue());
             fail("expected NullHeapException when accessing property value after freeing");
         } catch (NullHeapException e) {
             // we expect this, do nothing...
@@ -72,11 +72,11 @@ public class AllocatorTest {
     public void testValueSetAfterFree() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
-        a.setValue(42);
-        assertEquals(42, a.getValue());
+        a.value.set(42);
+        assertEquals(42, a.value.get().intValue());
         allocator.free(a);
         try {
-            a.setValue(60);
+            a.value.set(60);
             fail("expected NullHeapException when mutating property value after freeing");
         } catch (NullHeapException e) {
             // we expect this, do nothing...
@@ -87,7 +87,7 @@ public class AllocatorTest {
     public void testAllocationIntoFreeRegionWithExactSpace() throws OutOfMemoryException, NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
-        a.setValue(42);
+        a.value.set(42);
         int freeRegionsBefore = allocator.freeRegions();
         allocator.free(a);
         int freeRegionsAfter = allocator.freeRegions();

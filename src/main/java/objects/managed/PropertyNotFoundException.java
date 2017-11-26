@@ -1,4 +1,4 @@
-package objects;
+package objects.managed;
 
 public class PropertyNotFoundException extends RuntimeException {
 

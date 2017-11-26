@@ -3,8 +3,9 @@ package objects.episcopal;
 import gc.AllocationException;
 import gc.Allocator;
 import gc.OutOfMemoryException;
-import objects.NullHeapException;
+import objects.managed.NullHeapException;
 import objects.episcopal.representations.DistributionRepresentation;
+import objects.managed.PropertyAccessException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,13 +23,13 @@ public class DistribTest {
     }
 
     @Test
-    public void testDistributionRepresentationUnmarshall() throws OutOfMemoryException, NullHeapException, AllocationException {
+    public void testDistributionRepresentationUnmarshall() throws OutOfMemoryException, PropertyAccessException, AllocationException {
         Distrib<DistributionRepresentation> d1 = new Distrib<>(DistributionRepresentation.class, 0);
         Distrib<AlternateDistributionRepresentation> d2 = new Distrib<>(AlternateDistributionRepresentation.class, 0);
         alloc.allocate(d1);
         alloc.allocate(d2);
-        assertEquals(DistributionRepresentation.class, d1.getDistribType());
-        assertEquals(AlternateDistributionRepresentation.class, d2.getDistribType());
+        assertEquals(DistributionRepresentation.class, d1.distributionType.get());
+        assertEquals(AlternateDistributionRepresentation.class, d2.distributionType.get());
     }
 
     @Test
@@ -39,15 +40,15 @@ public class DistribTest {
         alloc.allocate(a);
         alloc.allocate(b);
         alloc.allocate(c);
-        a.setValue(10);
-        a.setValue(20);
-        a.setValue(30);
+        a.value.set(10);
+        a.value.set(20);
+        a.value.set(30);
         alloc.allocate(distrib);
-        distrib.setElementAddress(0, a.getAddress());
-        distrib.setElementAddress(1, b.getAddress());
-        distrib.setElementAddress(2, c.getAddress());
-        assertEquals(a.getAddress(), distrib.getElementAddress(0));
-        assertEquals(b.getAddress(), distrib.getElementAddress(1));
-        assertEquals(c.getAddress(), distrib.getElementAddress(2));
+        distrib.elementAddress(0).set(a.getAddress());
+        distrib.elementAddress(1).set(b.getAddress());
+        distrib.elementAddress(2).set(c.getAddress());
+        assertEquals(a.getAddress(), distrib.elementAddress(0).get().intValue());
+        assertEquals(b.getAddress(), distrib.elementAddress(1).get().intValue());
+        assertEquals(c.getAddress(), distrib.elementAddress(2).get().intValue());
     }
 }
