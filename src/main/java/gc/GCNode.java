@@ -1,21 +1,21 @@
 package gc;
 
-import object.episcopal.EpiscopalObject;
+import gc.episcopal.EpiscopalObject;
 import object.management.MemoryManagedObject;
 import object.management.PropertyAccessException;
 import object.properties.IntProperty;
 import object.properties.ReferenceProperty;
 
-public class Node<T extends EpiscopalObject> extends MemoryManagedObject {
+public class GCNode<T extends EpiscopalObject> extends MemoryManagedObject {
 
     private static final NodeType[] nodeTypes = NodeType.values();
 
     private final IntProperty type = new IntProperty();
-    public final ReferenceProperty<Node<? super T>> prev;
-    public final ReferenceProperty<Node<? super T>> next;
+    public final ReferenceProperty<GCNode<? super T>> prev;
+    public final ReferenceProperty<GCNode<? super T>> next;
     public final ReferenceProperty<T> data;
 
-    public Node(Node<? super T> prevInstance, Node<? super T> nextInstance, T dataInstance) {
+    public GCNode(GCNode<? super T> prevInstance, GCNode<? super T> nextInstance, T dataInstance) {
         super();
         prev = new ReferenceProperty<>(prevInstance);
         next = new ReferenceProperty<>(nextInstance);
@@ -26,7 +26,7 @@ public class Node<T extends EpiscopalObject> extends MemoryManagedObject {
         addProperty(data);
     }
 
-    public Node(T dataInstance) {
+    public GCNode(T dataInstance) {
         this(null, null, dataInstance);
     }
 

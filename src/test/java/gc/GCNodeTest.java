@@ -2,20 +2,19 @@ package gc;
 
 import static org.junit.Assert.*;
 
-import object.episcopal.EpiscopalObject;
-import object.episcopal.Int;
-import object.management.NullHeapException;
+import gc.episcopal.EpiscopalObject;
+import gc.episcopal.Int;
 import object.management.PropertyAccessException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NodeTest {
+public class GCNodeTest {
 
-    private Allocator alloc;
+    private BasicAllocator alloc;
 
     @Before
     public void setup() {
-        alloc = new Allocator();
+        alloc = new BasicAllocator();
     }
 
     @Test
@@ -25,7 +24,7 @@ public class NodeTest {
         alloc.allocate(data);
         data.value.set(42);
         // nodes need to keep track of an instance of their data type which they can provide back to the code user
-        Node<EpiscopalObject> node = new Node<>(new Int());
+        GCNode<EpiscopalObject> node = new GCNode<>(new Int());
         alloc.allocate(node);
         // make the node point to the aforementioned int
         node.data.set(data.getAddress());
@@ -41,9 +40,9 @@ public class NodeTest {
         Int data = new Int();
         Int nextData = new Int();
         Int prevData = new Int();
-        Node<Int> node = new Node<>(new Int());
-        Node<Int> prev = new Node<>(new Int());
-        Node<Int> next = new Node<>(new Int());
+        GCNode<Int> node = new GCNode<>(new Int());
+        GCNode<Int> prev = new GCNode<>(new Int());
+        GCNode<Int> next = new GCNode<>(new Int());
         alloc.allocate(data);
         alloc.allocate(nextData);
         alloc.allocate(prevData);
@@ -75,9 +74,9 @@ public class NodeTest {
         Int data = new Int();
         Int nextData = new Int();
         Int prevData = new Int();
-        Node<Int> prev = new Node<>(new Int());
-        Node<Int> next = new Node<>(new Int());
-        Node<Int> node = new Node<>(prev, next, new Int());
+        GCNode<Int> prev = new GCNode<>(new Int());
+        GCNode<Int> next = new GCNode<>(new Int());
+        GCNode<Int> node = new GCNode<>(prev, next, new Int());
         alloc.allocate(data);
         alloc.allocate(nextData);
         alloc.allocate(prevData);
@@ -106,8 +105,8 @@ public class NodeTest {
     @Test
     public void testLinkedListIteration() throws AllocationException, PropertyAccessException {
         int iterations = 10;
-        Node<? extends EpiscopalObject> root = null;
-        Node<Int> previous = null;
+        GCNode<? extends EpiscopalObject> root = null;
+        GCNode<Int> previous = null;
         // put values on the heap
         for (int i = 0; i < iterations; i++) {
             Int data = new Int();
@@ -117,7 +116,7 @@ public class NodeTest {
         }
         // set up the linked list of nodes
         for (int i = 0; i < iterations; i++) {
-            Node<Int> node = new Node<>(new Int());
+            GCNode<Int> node = new GCNode<>(new Int());
             alloc.allocate(node);
             // set this node's data pointing to position i
             node.data.set(i);
@@ -130,7 +129,7 @@ public class NodeTest {
         }
         assertNotNull(root);
         // we should find by iterating over the nodes a list of references to values 10, 20, 30, etc...
-        Node<? extends EpiscopalObject> node = root;
+        GCNode<? extends EpiscopalObject> node = root;
         for (int i = 0; i < iterations; i++) {
             assertTrue(node.data.getInstance() instanceof Int);
             assertEquals(10 * (i + 1), ((Int)node.data.getInstance()).value.get().intValue());

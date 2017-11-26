@@ -1,4 +1,4 @@
-package object.episcopal;
+package gc.episcopal;
 
 import object.properties.ReferenceProperty;
 

@@ -1,9 +1,9 @@
-package object.episcopal;
+package gc.episcopal;
 
 import gc.AllocationException;
-import gc.Allocator;
+import gc.BasicAllocator;
 import object.management.NullHeapException;
-import object.episcopal.representations.ClosureRepresentation;
+import gc.episcopal.representations.ClosureRepresentation;
 import object.management.PropertyAccessException;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,11 +14,11 @@ public class FunctionTest {
 
     private class AlternateClosureRepresentation extends ClosureRepresentation { }
 
-    private Allocator alloc;
+    private BasicAllocator alloc;
 
     @Before
     public void setup() {
-        alloc = new Allocator();
+        alloc = new BasicAllocator();
     }
 
     @Test

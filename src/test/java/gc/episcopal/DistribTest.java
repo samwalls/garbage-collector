@@ -1,10 +1,9 @@
-package object.episcopal;
+package gc.episcopal;
 
 import gc.AllocationException;
-import gc.Allocator;
-import object.management.MemoryManagedObject;
+import gc.BasicAllocator;
 import object.management.NullHeapException;
-import object.episcopal.representations.DistributionRepresentation;
+import gc.episcopal.representations.DistributionRepresentation;
 import object.management.PropertyAccessException;
 import object.properties.ReferenceProperty;
 import org.junit.Before;
@@ -18,11 +17,11 @@ public class DistribTest {
 
     private class AlternateDistributionRepresentation extends DistributionRepresentation { }
 
-    private Allocator alloc;
+    private BasicAllocator alloc;
 
     @Before
     public void setup() {
-        alloc = new Allocator();
+        alloc = new BasicAllocator();
     }
 
     @Test

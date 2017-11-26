@@ -3,19 +3,19 @@ package gc;
 import static org.junit.Assert.*;
 
 import object.management.NullHeapException;
-import object.episcopal.Distrib;
-import object.episcopal.Int;
-import object.episcopal.representations.DistributionRepresentation;
+import gc.episcopal.Distrib;
+import gc.episcopal.Int;
+import gc.episcopal.representations.DistributionRepresentation;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AllocatorTest {
+public class BasicAllocatorTest {
 
-    private Allocator allocator;
+    private BasicAllocator allocator;
 
     @Before
     public void before() {
-        allocator = new Allocator();
+        allocator = new BasicAllocator();
     }
 
     @Test
