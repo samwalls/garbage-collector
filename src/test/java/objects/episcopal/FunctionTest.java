@@ -2,7 +2,6 @@ package objects.episcopal;
 
 import gc.AllocationException;
 import gc.Allocator;
-import gc.OutOfMemoryException;
 import objects.managed.NullHeapException;
 import objects.episcopal.representations.ClosureRepresentation;
 import objects.managed.PropertyAccessException;
@@ -23,7 +22,7 @@ public class FunctionTest {
     }
 
     @Test
-    public void testClosureRepresentationUnmarshall() throws OutOfMemoryException, PropertyAccessException, AllocationException {
+    public void testClosureRepresentationUnmarshall() throws PropertyAccessException, AllocationException {
         Function<ClosureRepresentation> f1 = new Function<>(ClosureRepresentation.class, 0);
         Function<AlternateClosureRepresentation> f2 = new Function<>(AlternateClosureRepresentation.class, 0);
         alloc.allocate(f1);
@@ -33,7 +32,7 @@ public class FunctionTest {
     }
 
     @Test
-    public void testDistributionElementAccess() throws AllocationException, OutOfMemoryException, NullHeapException {
+    public void testDistributionElementAccess() throws AllocationException, NullHeapException {
         Int a = new Int(), b = new Int(), c = new Int();
         Function<ClosureRepresentation> function = new Function<>(ClosureRepresentation.class, 3);
         // example scenario, set up concrete values for the distribution, and use the distribution elements to point to them

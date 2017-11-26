@@ -20,7 +20,7 @@ public class Allocator {
         freeRoot = new FreeRegion(0, heap.getSize(), null);
     }
 
-    public void allocate(MemoryManagedObject object) throws OutOfMemoryException, AllocationException {
+    public void allocate(MemoryManagedObject object) throws AllocationException {
         // TODO free region coalescing
         // find the first free region with enough space to allocate the object
         FreeRegion previous = null, current = freeRoot;

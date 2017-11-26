@@ -26,7 +26,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testBasicAllocation() throws OutOfMemoryException, NullHeapException, AllocationException {
+    public void testBasicAllocation() throws NullHeapException, AllocationException {
         Int a = new Int();
         int freeBefore = allocator.freeSpace();
         allocator.allocate(a);
@@ -37,7 +37,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testBasicAllocationAndFree() throws OutOfMemoryException, NullHeapException, AllocationException {
+    public void testBasicAllocationAndFree() throws NullHeapException, AllocationException {
         Int a = new Int();
         int freeBefore = allocator.freeSpace();
         allocator.allocate(a);
@@ -54,7 +54,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testValueGetAfterFree() throws OutOfMemoryException, NullHeapException, AllocationException {
+    public void testValueGetAfterFree() throws NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
         a.value.set(42);
@@ -69,7 +69,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testValueSetAfterFree() throws OutOfMemoryException, NullHeapException, AllocationException {
+    public void testValueSetAfterFree() throws NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
         a.value.set(42);
@@ -84,7 +84,7 @@ public class AllocatorTest {
     }
 
     @Test
-    public void testAllocationIntoFreeRegionWithExactSpace() throws OutOfMemoryException, NullHeapException, AllocationException {
+    public void testAllocationIntoFreeRegionWithExactSpace() throws NullHeapException, AllocationException {
         Int a = new Int();
         allocator.allocate(a);
         a.value.set(42);

@@ -23,7 +23,7 @@ public class DistribTest {
     }
 
     @Test
-    public void testDistributionRepresentationUnmarshall() throws OutOfMemoryException, PropertyAccessException, AllocationException {
+    public void testDistributionRepresentationUnmarshall() throws PropertyAccessException, AllocationException {
         Distrib<DistributionRepresentation> d1 = new Distrib<>(DistributionRepresentation.class, 0);
         Distrib<AlternateDistributionRepresentation> d2 = new Distrib<>(AlternateDistributionRepresentation.class, 0);
         alloc.allocate(d1);
@@ -33,7 +33,7 @@ public class DistribTest {
     }
 
     @Test
-    public void testDistributionElementAccess() throws AllocationException, OutOfMemoryException, NullHeapException {
+    public void testDistributionElementAccess() throws AllocationException, NullHeapException {
         Int a = new Int(), b = new Int(), c = new Int();
         Distrib<DistributionRepresentation> distrib = new Distrib<>(DistributionRepresentation.class, 3);
         // example scenario, set up concrete values for the distribution, and use the distribution elements to point to them
