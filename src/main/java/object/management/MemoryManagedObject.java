@@ -58,6 +58,10 @@ public abstract class MemoryManagedObject implements Sizeable {
         this.heap = heap;
     }
 
+    public Heap getHeap() {
+        return heap;
+    }
+
     public int getAddress() {
         return address;
     }

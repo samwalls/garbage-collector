@@ -4,30 +4,30 @@ import object.episcopal.EpiscopalObject;
 import object.management.MemoryManagedObject;
 import object.management.PropertyAccessException;
 import object.properties.IntProperty;
+import object.properties.ReferenceProperty;
 
 public class Node<T extends EpiscopalObject> extends MemoryManagedObject {
 
     private static final NodeType[] nodeTypes = NodeType.values();
 
-    // keep an instance of the T type so that we can use it from a list of nodes
-    private T instance;
-
     private final IntProperty type = new IntProperty();
-    public final IntProperty prev = new IntProperty();
-    public final IntProperty next = new IntProperty();
-    public final IntProperty dataAddress = new IntProperty();
+    public final ReferenceProperty<Node<? super T>> prev;
+    public final ReferenceProperty<Node<? super T>> next;
+    public final ReferenceProperty<T> data;
 
-    public Node(T instance) {
+    public Node(Node<? super T> prevInstance, Node<? super T> nextInstance, T dataInstance) {
         super();
-        this.instance = instance;
+        prev = new ReferenceProperty<>(prevInstance);
+        next = new ReferenceProperty<>(nextInstance);
+        data = new ReferenceProperty<>(dataInstance);
         addProperty(type);
         addProperty(prev);
         addProperty(next);
-        addProperty(dataAddress);
+        addProperty(data);
     }
 
-    public T getInstance() {
-        return instance;
+    public Node(T dataInstance) {
+        this(null, null, dataInstance);
     }
 
     public NodeType type() throws PropertyAccessException {

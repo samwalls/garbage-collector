@@ -5,7 +5,7 @@ import object.Sizeable;
 
 public abstract class GeneralProperty<T> implements Marshallable<T>, Sizeable {
 
-    private int address;
+    private int relativeAddress;
 
     private MemoryManagedObject parent;
 
@@ -13,15 +13,15 @@ public abstract class GeneralProperty<T> implements Marshallable<T>, Sizeable {
         this.parent = parent;
     }
 
-    MemoryManagedObject getParent() {
+    protected MemoryManagedObject getParent() {
         return parent;
     }
 
     int getRelativeAddress() {
-        return address;
+        return relativeAddress;
     }
 
     void setRelativeAddress(int address) {
-        this.address = address;
+        this.relativeAddress = address;
     }
 }
