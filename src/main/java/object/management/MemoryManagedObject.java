@@ -2,6 +2,7 @@ package object.management;
 
 import gc.Heap;
 import object.Sizeable;
+import object.properties.ReferenceProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,14 @@ public abstract class MemoryManagedObject implements Sizeable {
 
     public int size() {
         return nextRelativePropertyAddress;
+    }
+
+    public List<ReferenceProperty> reachableReferences() {
+        List<ReferenceProperty> links = new ArrayList<>();
+        for (GeneralProperty property : properties)
+            if (property instanceof ReferenceProperty)
+                links.add((ReferenceProperty)property);
+        return links;
     }
 
     /**
