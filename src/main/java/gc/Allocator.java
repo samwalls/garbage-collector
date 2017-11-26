@@ -1,7 +1,7 @@
 package gc;
 
-import objects.managed.MemoryManagedObject;
-import objects.managed.PropertyAccessException;
+import object.management.MemoryManagedObject;
+import object.management.PropertyAccessException;
 
 import java.util.HashSet;
 import java.util.Set;

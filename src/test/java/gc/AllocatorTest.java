@@ -2,10 +2,10 @@ package gc;
 
 import static org.junit.Assert.*;
 
-import objects.managed.NullHeapException;
-import objects.episcopal.Distrib;
-import objects.episcopal.Int;
-import objects.episcopal.representations.DistributionRepresentation;
+import object.management.NullHeapException;
+import object.episcopal.Distrib;
+import object.episcopal.Int;
+import object.episcopal.representations.DistributionRepresentation;
 import org.junit.Before;
 import org.junit.Test;
 
