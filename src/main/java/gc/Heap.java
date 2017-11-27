@@ -2,11 +2,13 @@ package gc;
 
 public class Heap {
 
-    public static final int HEAP_MAX = Integer.MAX_VALUE / 64;
-
     public static final int NULL = -1;
 
-    private long[] memory = new long[HEAP_MAX];
+    private long[] memory;
+
+    public Heap(int heapSize) {
+        memory = new long[heapSize];
+    }
 
     public void put(int address, long[] data) {
         System.arraycopy(data, 0, memory, address, data.length);

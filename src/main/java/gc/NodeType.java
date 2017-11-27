@@ -1,8 +1,8 @@
 package gc;
 
 public enum NodeType {
-    NEW,
-    FREE,
-    FROM,
-    TO
+    GREY,
+    BLACK,
+    WHITE,
+    ECRU
 }

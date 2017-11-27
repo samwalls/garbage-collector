@@ -8,16 +8,22 @@ import java.util.Set;
 
 public class BasicAllocator implements Allocator<MemoryManagedObject> {
 
+    public static final int HEAP_SIZE_DEFAULT = Integer.MAX_VALUE / 64;
+
     private Heap heap;
 
     private Set<MemoryManagedObject> objects;
 
     private FreeRegion freeRoot;
 
-    public BasicAllocator() {
-        heap = new Heap();
+    public BasicAllocator(int heapSize) {
+        heap = new Heap(heapSize);
         objects = new HashSet<>();
         freeRoot = new FreeRegion(0, heap.getSize(), null);
+    }
+
+    public BasicAllocator() {
+        this(HEAP_SIZE_DEFAULT);
     }
 
     public void allocate(MemoryManagedObject object) throws AllocationException {
