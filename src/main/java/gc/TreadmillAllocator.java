@@ -22,22 +22,33 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     private BasicAllocator heapAllocator;
 
+    private DebugMode debugMode;
+
     // top <-> ... grey nodes ... <-> scan
     // scan <-> ... black nodes ... <-> free
     // free <-> ... white nodes ... <-> bottom
     // bottom <-> ... ecru (off-white) nodes ... <-> top
     private GCNode<? super EpiscopalObject> top = null, scan = null, free = null, bottom = null;
 
-    public TreadmillAllocator(int heapSize, int scanFrequency, Collection<EpiscopalObject> roots) throws AllocationException {
+    public TreadmillAllocator(int heapSize, int scanFrequency, Collection<EpiscopalObject> roots, DebugMode debugMode) throws AllocationException {
         if (scanFrequency <= 0)
             throw new IllegalArgumentException("illegal scan frequency: " + scanFrequency + "; frequency must be > 0");
         this.scanFrequency = scanFrequency;
+        this.debugMode = debugMode;
         heapAllocator = new BasicAllocator(heapSize);
         try {
             initTreadmill(roots);
         } catch (PropertyAccessException e) {
             throw new AllocationException(e);
         }
+    }
+
+    public TreadmillAllocator(int heapSize, int scanFrequency, Collection<EpiscopalObject> roots) throws AllocationException {
+        this(heapSize, scanFrequency, roots, DebugMode.NONE);
+    }
+
+    public TreadmillAllocator(int scanFrequency, Collection<EpiscopalObject> roots, DebugMode debugMode) throws AllocationException {
+        this(BasicAllocator.HEAP_SIZE_DEFAULT, scanFrequency, roots, debugMode);
     }
 
     public TreadmillAllocator(int scanFrequency, Collection<EpiscopalObject> roots) throws AllocationException {
@@ -48,7 +59,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     @Override
     public void allocate(EpiscopalObject object) throws AllocationException {
-        printTreadmill("before allocation");
+        printTreadmill("before allocation", DebugMode.VERBOSE);
         // scan if necessary
         if (++currentScan >= scanFrequency) {
             scan();
@@ -65,7 +76,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
             throw new AllocationException(e);
         }
         allocateObjectIntoFree(object);
-        printTreadmill("after allocation");
+        printTreadmill("after allocation of " + object.toString(), DebugMode.BASIC);
     }
 
     @Override
@@ -81,7 +92,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
             if (!anyOfType(GREY))
                 return;
             GCNode<? super EpiscopalObject> toScan = getFront(GREY);
-            printTreadmill("starting scan for " + treadmillNodeRepresentation(toScan));
+            printTreadmill("starting scan for " + treadmillNodeRepresentation(toScan), DebugMode.VERBOSE);
             for (ReferenceProperty reference : toScan.data.getInstance().reachableReferences()) {
                 // if the reference is null, don't follow it
                 if (reference.getInstance() == null)
@@ -94,7 +105,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
                 }
             }
             make(toScan, BLACK);
-            printTreadmill("finished scan for " + treadmillNodeRepresentation(toScan));
+            printTreadmill("finished scan for " + treadmillNodeRepresentation(toScan), DebugMode.NORMAL);
         } catch (PropertyAccessException e) {
             throw new AllocationException(e);
         }
@@ -102,7 +113,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     private void flip() throws AllocationException {
         try {
-            printTreadmill("starting flip");
+            printTreadmill("starting flip", DebugMode.VERBOSE);
             while (top != null && scan != null)
                 scan();
             // turn all ecru nodes into white nodes (freeing their linked data)
@@ -112,21 +123,21 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
                 make(node, NodeType.WHITE);
                 node = node.next.getInstance();
             }
-            printTreadmill("turn ecru into white");
+            printTreadmill("turn ecru into white", DebugMode.VERBOSE);
             addNewFreeNode();
-            printTreadmill("add new free node");
+            printTreadmill("add new free node", DebugMode.VERBOSE);
             // turn all black nodes into ecru
             node = getFront(BLACK);
             while (node != null && node.type() == BLACK) {
                 GCNode<? super EpiscopalObject> next = node.next.getInstance();
                 String debugMessage = "moving node " + treadmillNodeRepresentation(node) + " to ECRU";
                 make(node, NodeType.ECRU);
-                printTreadmill(debugMessage);
+                printTreadmill(debugMessage, DebugMode.VERBOSE);
                 node = next;
             }
-            printTreadmill("turn black into ecru");
+            printTreadmill("turn black into ecru", DebugMode.VERBOSE);
             markRoots();
-            printTreadmill("mark roots as grey / finish flip");
+            printTreadmill("mark roots as grey / finish flip", DebugMode.NORMAL);
         } catch (PropertyAccessException e) {
             throw new AllocationException(e);
         }
@@ -345,7 +356,9 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     //******** DEBUGGING HELPERS ********//
 
-    public void printTreadmill(String state) {
+    public void printTreadmill(String state, DebugMode mode) {
+        if (debugMode == DebugMode.NONE || mode.ordinal() > debugMode.ordinal())
+            return;
         String message = "____________ " + state + " ____________";
         System.out.println(message);
         GCNode<? super EpiscopalObject> front = firstAvailableFront();

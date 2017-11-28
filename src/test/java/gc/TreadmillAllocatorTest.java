@@ -18,7 +18,7 @@ public class TreadmillAllocatorTest {
 
     private void setupTest1() throws AllocationException {
         test1RootFunction = new Function<>(ClosureRepresentation.class, 4);
-        test1 = new TreadmillAllocator(1, Arrays.asList(test1RootFunction));
+        test1 = new TreadmillAllocator(1, Arrays.asList(test1RootFunction), DebugMode.BASIC);
     }
 
     @Before
