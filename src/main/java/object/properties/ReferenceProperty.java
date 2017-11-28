@@ -1,5 +1,6 @@
 package object.properties;
 
+import gc.Heap;
 import object.management.MemoryManagedObject;
 import object.management.NullHeapException;
 
@@ -43,6 +44,9 @@ public class ReferenceProperty<T extends MemoryManagedObject> extends IntPropert
     public void setInstance(T instance) throws NullHeapException {
         this.instance = instance;
         // set this property's value to the global address of the object
-        set(instance.getAddress());
+        if (instance == null)
+            set(Heap.NULL);
+        else
+            set(instance.getAddress());
     }
 }
