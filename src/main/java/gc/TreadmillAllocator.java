@@ -2,6 +2,7 @@ package gc;
 
 import gc.episcopal.EpiscopalObject;
 import object.management.MemoryManagedObject;
+import object.management.NullHeapException;
 import object.management.PropertyAccessException;
 import object.properties.ReferenceProperty;
 
@@ -81,8 +82,26 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     @Override
     public void free(EpiscopalObject object) throws AllocationException {
-        GCNode<? super EpiscopalObject> node = object.getGCNode();
-        // TODO
+        if (object == null)
+            throw new AllocationException("cannot free null object");
+        printTreadmill("before freeing object " + object.toString(), DebugMode.NORMAL);
+        if (object.getGCNode() == null || object.getGCNode().getAddress() == Heap.NULL)
+            throw new AllocationException("cannot free object " + object.toString() + " because it is not allocated on this heap");
+        if (roots.contains(object))
+            throw new AllocationException("cannot free a distinguished root object");
+        try {
+            GCNode<? super EpiscopalObject> node = object.getGCNode();
+            // disassociate the object with it's GC node
+            node.data.setInstance(null);
+            object.setGCNode(null);
+            // free the object's allocated space (disassociating it from the heap)
+            heapAllocator.free(object);
+            // make the node white, for later use
+            make(node, WHITE);
+        } catch (PropertyAccessException e) {
+            throw new AllocationException("failed to disassociate the object " + object.toString() + " with the allocator's heap");
+        }
+        printTreadmill("after freeing object " + object.toString(), DebugMode.BASIC);
     }
 
     //******** TREADMILL HELPERS ********//
@@ -261,19 +280,19 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
                     return getFront(BLACK).next.getInstance();
                 if (anyOfType(WHITE))
                     return getFront((WHITE));
-                if (top != null)
-                    return top;
                 if (bottom != null)
                     return bottom;
+                if (top != null)
+                    return top;
             case WHITE:
                 if (anyOfType(WHITE))
                     return getFront(WHITE).next.getInstance();
-                if (top != null)
-                    return top;
-                if (scan != null)
-                    return scan;
                 if (bottom != null)
                     return bottom;
+                if (scan != null)
+                    return scan;
+                if (top != null)
+                    return top;
         }
         return top;
     }

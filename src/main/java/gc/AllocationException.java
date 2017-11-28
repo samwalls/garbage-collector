@@ -9,4 +9,8 @@ public class AllocationException extends Exception {
     public AllocationException(Exception cause) {
         super(cause);
     }
+
+    public AllocationException(String message, Exception cause) {
+        super(message, cause);
+    }
 }
