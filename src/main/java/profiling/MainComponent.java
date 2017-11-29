@@ -14,13 +14,13 @@ public class MainComponent {
                 // run for problem instances of these sizes
                 1, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000
                 // run 100 times and average
-        ), 5);
+        ), 100);
         profiler.run();
         profiler = new TimeProfiler("indirect", new TreadmillIndirectProblem(), Arrays.asList(
                 // run for problem instances of these sizes
                 1, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000
                 // run 100 times and average
-        ), 5);
+        ), 100);
         profiler.run();
     }
 }
