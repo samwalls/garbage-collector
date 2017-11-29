@@ -2,8 +2,8 @@ package gc;
 
 import static org.junit.Assert.*;
 
-import gc.episcopal.EpiscopalObject;
-import gc.episcopal.Int;
+import episcopal.EpiscopalObject;
+import episcopal.Int;
 import object.management.PropertyAccessException;
 import org.junit.Before;
 import org.junit.Test;

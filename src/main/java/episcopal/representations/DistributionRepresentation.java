@@ -1,3 +1,3 @@
-package gc.episcopal.representations;
+package episcopal.representations;
 
 public abstract class DistributionRepresentation {}

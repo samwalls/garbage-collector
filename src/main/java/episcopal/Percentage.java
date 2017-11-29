@@ -1,4 +1,4 @@
-package gc.episcopal;
+package episcopal;
 
 public class Percentage extends Double {
 

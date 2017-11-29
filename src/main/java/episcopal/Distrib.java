@@ -1,9 +1,9 @@
-package gc.episcopal;
+package episcopal;
 
 import object.management.NullHeapException;
 import object.properties.ClassProperty;
 import object.properties.IntProperty;
-import gc.episcopal.representations.DistributionRepresentation;
+import episcopal.representations.DistributionRepresentation;
 import object.properties.ReferenceProperty;
 
 import java.util.ArrayList;

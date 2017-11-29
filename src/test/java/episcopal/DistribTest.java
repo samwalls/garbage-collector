@@ -1,9 +1,9 @@
-package gc.episcopal;
+package episcopal;
 
 import gc.AllocationException;
 import gc.BasicAllocator;
 import object.management.NullHeapException;
-import gc.episcopal.representations.DistributionRepresentation;
+import episcopal.representations.DistributionRepresentation;
 import object.management.PropertyAccessException;
 import object.properties.ReferenceProperty;
 import org.junit.Before;

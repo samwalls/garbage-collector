@@ -1,6 +1,6 @@
 package gc;
 
-import gc.episcopal.EpiscopalObject;
+import episcopal.EpiscopalObject;
 import object.management.MemoryManagedObject;
 import object.management.PropertyAccessException;
 import object.properties.IntProperty;

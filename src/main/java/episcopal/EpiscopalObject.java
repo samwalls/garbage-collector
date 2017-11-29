@@ -1,4 +1,4 @@
-package gc.episcopal;
+package episcopal;
 
 import gc.GCNode;
 import object.management.MemoryManagedObject;

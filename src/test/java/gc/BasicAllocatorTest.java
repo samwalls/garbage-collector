@@ -3,9 +3,9 @@ package gc;
 import static org.junit.Assert.*;
 
 import object.management.NullHeapException;
-import gc.episcopal.Distrib;
-import gc.episcopal.Int;
-import gc.episcopal.representations.DistributionRepresentation;
+import episcopal.Distrib;
+import episcopal.Int;
+import episcopal.representations.DistributionRepresentation;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,9 +1,9 @@
 package gc;
 
-import gc.episcopal.Function;
-import gc.episcopal.Indirect;
-import gc.episcopal.Int;
-import gc.episcopal.representations.ClosureRepresentation;
+import episcopal.Function;
+import episcopal.Indirect;
+import episcopal.Int;
+import episcopal.representations.ClosureRepresentation;
 import object.management.PropertyAccessException;
 import org.junit.Before;
 import org.junit.Test;

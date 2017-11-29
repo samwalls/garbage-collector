@@ -1,9 +1,9 @@
-package gc.episcopal;
+package episcopal;
 
 import gc.AllocationException;
 import gc.BasicAllocator;
 import object.management.NullHeapException;
-import gc.episcopal.representations.ClosureRepresentation;
+import episcopal.representations.ClosureRepresentation;
 import object.management.PropertyAccessException;
 import org.junit.Before;
 import org.junit.Test;
