@@ -94,6 +94,52 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         this(BasicAllocator.HEAP_SIZE_DEFAULT, 1, roots, debugMode);
     }
 
+    /**
+     * @return the current space (in heap words) marked as allocated in the heap
+     */
+    public int usedHeapSpace() {
+        return heapAllocator.heapSize() - heapAllocator.freeSpace();
+    }
+
+    /**
+     * @return the current size of the heap (allocated and non-allocated regions combined)
+     */
+    public int currentHeapSize() {
+        return heapAllocator.heapSize();
+    }
+
+    /**
+     * @return the number of non-white (used) GC nodes in the treadmill
+     */
+    public int countNonWhiteNodes() {
+        int count = 0;
+        for (GCNode node : nodes) {
+            try {
+                if (node.type() != WHITE)
+                    count++;
+            } catch (PropertyAccessException e) {
+                // do nothing
+            }
+        }
+        return count;
+    }
+
+    /**
+     * @return the number of white (free) GC nodes in the treadmill
+     */
+    public int countWhiteNodes() {
+        int count = 0;
+        for (GCNode node : nodes) {
+            try {
+                if (node.type() == WHITE)
+                    count++;
+            } catch (PropertyAccessException e) {
+                // do nothing
+            }
+        }
+        return count;
+    }
+
     //******** ALLOCATOR IMPLEMENTATION ********//
 
     @Override
@@ -139,6 +185,8 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         } catch (PropertyAccessException e) {
             throw new AllocationException("failed to disassociate the object " + object.toString() + " with the allocator's heap");
         }
+        // flip to compact any empty nodes
+        flip();
         printTreadmill("after freeing object " + object.toString(), DebugMode.BASIC);
     }
 
@@ -157,7 +205,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
             // for each reachable object in the node to scan
             for (ReferenceProperty reference : toScan.data.getInstance().reachableReferences()) {
                 // if the reference is null, don't follow it
-                if (reference.getInstance() == null)
+                if (reference.getInstance() == null || ((EpiscopalObject)reference.getInstance()).getGCNode() == null)
                     continue;
                 // this is a node which scan's value points to
                 GCNode<? super EpiscopalObject> referenceNode = ((EpiscopalObject)reference.getInstance()).getGCNode();
@@ -187,18 +235,21 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
     private void flip() throws AllocationException {
         try {
             printTreadmill("starting flip", DebugMode.VERBOSE);
-            while (top != null && scan != null)
+            while (anyOfType(GREY))
                 scan();
             // turn all ecru nodes into white nodes (freeing their linked data)
             GCNode<? super EpiscopalObject> node = getFront(ECRU);
             while (node != null && node.type() == NodeType.ECRU) {
                 heapAllocator.free(node.data.getInstance());
+                node.data.setInstance(null);
                 make(node, NodeType.WHITE);
                 node = node.next.getInstance();
             }
             printTreadmill("turn ecru into white", DebugMode.VERBOSE);
-            addNewFreeNode();
-            printTreadmill("add new free node", DebugMode.VERBOSE);
+            if (isHeapFull()) {
+                addNewFreeNode();
+                printTreadmill("add new free node", DebugMode.VERBOSE);
+            }
             // turn all black nodes into ecru
             node = getFront(BLACK);
             while (node != null && node.type() == BLACK) {
@@ -432,22 +483,35 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
     }
 
     /**
-     * Unset any fronts which are associated with this node specifically. If any neighbouring nodes are of the same
+     * Unset all fronts which are associated with this node specifically. If any neighbouring nodes are of the same
      * colour, they will inherit the role of the front.
      * @param node the node to disassociate from the coloured fronts
      * @throws PropertyAccessException if there was a problem accessing the properties of the node
      */
     private void unsetFronts(GCNode<? super EpiscopalObject> node) throws PropertyAccessException {
+        unsetFront(node, node.type());
+        unsetFront(node, ECRU);
+        unsetFront(node, GREY);
+        unsetFront(node, BLACK);
+        unsetFront(node, WHITE);
+    }
+
+    /**
+     * Unset the specified front if it is associated with this node specifically. If any neighbouring nodes are of the
+     * same colour, they will inherit the role of the front.
+     * @param node the node to disassociate from the coloured fronts
+     * @throws PropertyAccessException if there was a problem accessing the properties of the node
+     */
+    private void unsetFront(GCNode<? super EpiscopalObject> node, NodeType colour) throws PropertyAccessException {
         // remove the front if it is associated with this
-        if (getFront(node.type()) == node) {
-            setFront(node.type(), null);
-        }
+        if (getFront(colour) == node)
+            setFront(colour, null);
         // set the front if the neighbour matches it
-        if (getFront(node.type()) == null) {
-            if (node.prev.getInstance() != null && node.prev.getInstance().type() == node.type()) {
-                setFront(node.prev.getInstance().type(), node.prev.getInstance());
-            } else if (node.next.getInstance() != null && node.next.getInstance().type() == node.type()) {
-                setFront(node.next.getInstance().type(), node.next.getInstance());
+        if (getFront(colour) == null) {
+            if (node.prev.getInstance() != null && node.prev.getInstance().type() == colour) {
+                setFront(colour, node.prev.getInstance());
+            } else if (node.next.getInstance() != null && node.next.getInstance().type() == colour) {
+                setFront(colour, node.next.getInstance());
             }
         }
     }
