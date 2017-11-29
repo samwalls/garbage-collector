@@ -2,7 +2,6 @@ package gc;
 
 import gc.episcopal.EpiscopalObject;
 import object.management.MemoryManagedObject;
-import object.management.NullHeapException;
 import object.management.PropertyAccessException;
 import object.properties.ReferenceProperty;
 
@@ -12,6 +11,13 @@ import java.util.Set;
 
 import static gc.NodeType.*;
 
+/**
+ * An implementation of <i>Henry G. Baker's</i> real-time treadmill garbage collector as an {@link Allocator} of
+ * {@link EpiscopalObject} types.
+ *
+ * @see <a href="http://home.pipeline.com/~hbaker1/NoMotionGC.html">"The Treadmill: Real-Time Garbage Collection Without Motion Sickness"</a> by Henry G. Baker
+ * @see <a href="http://www.memorymanagement.org/glossary/t.html#term-treadmill">memorymanagement.org/glossary/t.html#term-treadmill</a>
+ */
 public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     private final int scanFrequency;
@@ -31,6 +37,13 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
     // bottom <-> ... ecru (off-white) nodes ... <-> top
     private GCNode<? super EpiscopalObject> top = null, scan = null, free = null, bottom = null;
 
+    /**
+     * @param heapSize the size of the heap to use
+     * @param scanFrequency the number of allocations that must pass before a scan is forced
+     * @param roots the set of root objects to discern from others
+     * @param debugMode the debug mode to use (higher debug modes equate to more verbose output)
+     * @throws AllocationException if there was a problem allocating any of the root objects
+     */
     public TreadmillAllocator(int heapSize, int scanFrequency, Collection<EpiscopalObject> roots, DebugMode debugMode) throws AllocationException {
         if (scanFrequency <= 0)
             throw new IllegalArgumentException("illegal scan frequency: " + scanFrequency + "; frequency must be > 0");
@@ -44,16 +57,41 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         }
     }
 
+    /**
+     * @param heapSize the size of the heap to use
+     * @param scanFrequency the number of allocations that must pass before a scan is forced
+     * @param roots the set of root objects to discern from others
+     * @throws AllocationException if there was a problem allocating any of the root objects
+     */
     public TreadmillAllocator(int heapSize, int scanFrequency, Collection<EpiscopalObject> roots) throws AllocationException {
         this(heapSize, scanFrequency, roots, DebugMode.NONE);
     }
 
+    /**
+     * @param scanFrequency the number of allocations that must pass before a scan is forced
+     * @param roots the set of root objects to discern from others
+     * @param debugMode the debug mode to use (higher debug modes equate to more verbose output)
+     * @throws AllocationException if there was a problem allocating any of the root objects
+     */
     public TreadmillAllocator(int scanFrequency, Collection<EpiscopalObject> roots, DebugMode debugMode) throws AllocationException {
         this(BasicAllocator.HEAP_SIZE_DEFAULT, scanFrequency, roots, debugMode);
     }
 
-    public TreadmillAllocator(int scanFrequency, Collection<EpiscopalObject> roots) throws AllocationException {
-        this(BasicAllocator.HEAP_SIZE_DEFAULT, scanFrequency, roots);
+    /**
+     * @param roots the set of root objects to discern from others
+     * @throws AllocationException if there was a problem allocating any of the root objects
+     */
+    public TreadmillAllocator(Collection<EpiscopalObject> roots) throws AllocationException {
+        this(1, roots, DebugMode.NONE);
+    }
+
+    /**
+     * @param roots the set of root objects to discern from others
+     * @param debugMode the debug mode to use (higher debug modes equate to more verbose output)
+     * @throws AllocationException if there was a problem allocating any of the root objects
+     */
+    public TreadmillAllocator(Collection<EpiscopalObject> roots, DebugMode debugMode) throws AllocationException {
+        this(BasicAllocator.HEAP_SIZE_DEFAULT, 1, roots, debugMode);
     }
 
     //******** ALLOCATOR IMPLEMENTATION ********//
@@ -106,12 +144,17 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     //******** TREADMILL HELPERS ********//
 
+    /**
+     * Scan a grey node, if any exist.
+     * @throws AllocationException
+     */
     private void scan() throws AllocationException {
         try {
             if (!anyOfType(GREY))
                 return;
             GCNode<? super EpiscopalObject> toScan = getFront(GREY);
             printTreadmill("starting scan for " + treadmillNodeRepresentation(toScan), DebugMode.VERBOSE);
+            // for each reachable object in the node to scan
             for (ReferenceProperty reference : toScan.data.getInstance().reachableReferences()) {
                 // if the reference is null, don't follow it
                 if (reference.getInstance() == null)
@@ -130,6 +173,17 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         }
     }
 
+    /**
+     * Flip is called if there are no free nodes left to assign to an object.
+     * All ecru nodes at present (objects which have been deemed unreachable) are made white, and their objects are
+     * freed in the process. A new white node is also added to ensure that there are enough to associate with a new
+     * object.
+     * All black nodes are made ecru, making them "condemned" candidates for removal. If however they are later scanned
+     * as root objects (made black), or deemed as reachable (made grey), it is ensured they won't be removed on the next
+     * {@link TreadmillAllocator#flip} call.
+     * @throws AllocationException if any of the properties of the objects being flipped could not be accessed, or there
+     * was an issue freeing any unreachable objects.
+     */
     private void flip() throws AllocationException {
         try {
             printTreadmill("starting flip", DebugMode.VERBOSE);
@@ -162,6 +216,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         }
     }
 
+    /**
+     * Put the treadmill in a state where normal operation can resume.
+     * @param initialRoots the set of root objects to allocate initially, and discern from others
+     * @throws AllocationException if there was a problem allocating any of the root objects
+     * @throws PropertyAccessException if there was a problem accessing the new node's properties
+     */
     private void initTreadmill(Collection<EpiscopalObject> initialRoots) throws AllocationException, PropertyAccessException {
         roots = new HashSet<>(initialRoots);
         nodes = new HashSet<>();
@@ -180,6 +240,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
             setFront(firstRoot.type(), firstRoot);
     }
 
+    /**
+     * @param object the object to allocate as a root object
+     * @return a {@link GCNode} which references the given object as its data
+     * @throws AllocationException if a new {@link GCNode} could not be allocated
+     * @throws PropertyAccessException if there was a problem setting any of the properties on the new node
+     */
     private GCNode<? super EpiscopalObject> allocateRootObject(EpiscopalObject object) throws AllocationException, PropertyAccessException {
         GCNode<? super EpiscopalObject> node = new GCNode<>(object);
         object.setGCNode(node);
@@ -190,8 +256,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         return node;
     }
 
+    /**
+     * Mark all roots as grey.
+     * @throws AllocationException if there was a problem changing any properties of the nodes associated with root
+     * objects
+     */
     private void markRoots() throws AllocationException {
-        // mark all roots as grey
         try {
             for (EpiscopalObject root : roots)
                 if (root.getGCNode().type() != GREY)
@@ -201,6 +271,11 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         }
     }
 
+    /**
+     * Allocate and add a new white node to the treadmill.
+     * @throws PropertyAccessException if there was a problem setting any of the properties on the node
+     * @throws AllocationException if there was a problem allocating the new node
+     */
     private void addNewFreeNode() throws PropertyAccessException, AllocationException {
         GCNode<? super EpiscopalObject> node = new GCNode<>(null);
         heapAllocator.allocate(node);
@@ -208,6 +283,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         make(node, NodeType.WHITE);
     }
 
+    /**
+     * Given a colour, set the "front" for the colour to the given node. The "front" is the first node of the colour
+     * type in the treadmill's doubly-linked list.
+     * @param colour the colour to set the front for
+     * @param node the node to set the front as
+     */
     private void setFront(NodeType colour, GCNode<? super EpiscopalObject> node) {
         switch (colour) {
             case GREY:
@@ -225,6 +306,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         }
     }
 
+    /**
+     * Given a colour, get the node representing the "front" for the colour. The "front" is the first node of the colour
+     * type in the treadmill's doubly-linked list.
+     * @param colour the colour to get the front for
+     * @return the node representing the front, if it exists, null otherwise
+     */
     private GCNode<? super EpiscopalObject> getFront(NodeType colour) {
         switch (colour) {
             case GREY:
@@ -239,6 +326,11 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         return null;
     }
 
+    /**
+     * Reassign the coloured fronts if necessary, given that the passed node was just inserted beside one.
+     * @param node the node which has just been added
+     * @throws PropertyAccessException
+     */
     private void reassignPointers(GCNode<? super EpiscopalObject> node) throws PropertyAccessException {
         // scenario: the given node has just been inserted to the right of a treadmill pointer
         // only one element in the doubly-linked list
@@ -249,12 +341,17 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
     }
 
     /**
-     * @return true if there are any nodes of this type
+     * @return true if there are any nodes of this colour type
      */
     private boolean anyOfType(NodeType type) {
         return getFront(type) != null;
     }
 
+    /**
+     * @param colour the colour of the node we want to insert into the treadmill
+     * @return the node which the passed node should be inserted to the left of, in order to maintain some colour
+     * invariant.
+     */
     private GCNode<? super EpiscopalObject> insertionPoint(NodeType colour) {
         switch (colour) {
             case ECRU:
@@ -297,8 +394,16 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         return top;
     }
 
+    /**
+     * Change the colour of the given node to match the passed colour, and insert it to the correct place in the
+     * treadmill, respecting the already existing coloured "fronts". See {@link TreadmillAllocator#getFront} and
+     * {@link TreadmillAllocator#setFront}.
+     * @param node the node to change the colour of, and insert to the correct place
+     * @param colour the colour to set the node to
+     * @throws PropertyAccessException if there was a problem accessing the properties of the given node
+     */
     private void make(GCNode<? super EpiscopalObject> node, NodeType colour) throws PropertyAccessException {
-        insertPrevPreservePointers(insertionPoint(colour), node);
+        insertPrev(insertionPoint(colour), node);
         node.setType(colour);
         reassignPointers(node);
     }
@@ -306,11 +411,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
     //******** NODE HELPERS ********//
 
     /**
-     * Insert prev to the left of node, unlinking it from it's current position.
+     * Insert newPrev to the left of node, unlinking it from it's current position. All colour fronts will be
+     * reassigned as necessary given the insertion.
      * @param node the target node
-     * @param newPrev the node to insert as node's prev
+     * @param newPrev the node to insert as node's new prev
      */
-    private void insertPrevPreservePointers(GCNode<? super EpiscopalObject> node, GCNode<?super EpiscopalObject> newPrev) throws PropertyAccessException {
+    private void insertPrev(GCNode<? super EpiscopalObject> node, GCNode<?super EpiscopalObject> newPrev) throws PropertyAccessException {
         if (node == newPrev) {
             unsetFronts(newPrev);
             return;
@@ -325,6 +431,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         newPrev.next.setInstance(node);
     }
 
+    /**
+     * Unset any fronts which are associated with this node specifically. If any neighbouring nodes are of the same
+     * colour, they will inherit the role of the front.
+     * @param node the node to disassociate from the coloured fronts
+     * @throws PropertyAccessException if there was a problem accessing the properties of the node
+     */
     private void unsetFronts(GCNode<? super EpiscopalObject> node) throws PropertyAccessException {
         // remove the front if it is associated with this
         if (getFront(node.type()) == node) {
@@ -340,6 +452,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         }
     }
 
+    /**
+     * Unlink the node from its place in the treadmill, updating the coloured fronts as necessary.
+     * @param node the node to unlink
+     * @throws PropertyAccessException if there was a problem accessing the properties of the given node or either of
+     * its neighbours
+     */
     private void unlink(GCNode<? super EpiscopalObject> node) throws PropertyAccessException {
         unsetFronts(node);
         if (node.next.getInstance() == node || node.prev.getInstance() == node) {
@@ -355,10 +473,19 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
             next.prev.setInstance(prev);
     }
 
+    /**
+     * @return true if there are no free nodes left to use for a newly allocated object
+     * @throws PropertyAccessException if there was a problem accessing the properties of the current white front
+     */
     private boolean isHeapFull() throws PropertyAccessException {
-        return free == null || free.type() != NodeType.WHITE;
+        return getFront(WHITE) == null || getFront(WHITE).type() != NodeType.WHITE;
     }
 
+    /**
+     * Given the object, allocate it onto the heap and associate it with a free node.
+     * @param object the object to allocate into the treadmill
+     * @throws AllocationException if there was a problem allocating the object or there are no free nodes left
+     */
     private void allocateObjectIntoFree(EpiscopalObject object) throws AllocationException {
         try {
             heapAllocator.allocate(object);
@@ -375,6 +502,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
 
     //******** DEBUGGING HELPERS ********//
 
+    /**
+     * Print a representation of the current treadmill to standard-out.
+     * @param state a label to associate with the current state of the treadmill
+     * @param mode the debug mode to use for this message (output only visible if the treadmill's debug mode is equal to
+     *             or higher than this)
+     */
     public void printTreadmill(String state, DebugMode mode) {
         if (debugMode == DebugMode.NONE || mode.ordinal() > debugMode.ordinal())
             return;
