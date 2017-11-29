@@ -2,8 +2,10 @@ group 'st-andrews.ac.uk'
 version '1.0'
 
 apply plugin: 'java'
+apply plugin: 'application'
 
 sourceCompatibility = 1.8
+mainClassName = "profiling.MainComponent"
 
 repositories {
     mavenCentral()
@@ -14,5 +16,6 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
-
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-csv
+    compile group: 'org.apache.commons', name: 'commons-csv', version: '1.5'
 }

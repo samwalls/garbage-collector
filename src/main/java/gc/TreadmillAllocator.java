@@ -94,6 +94,10 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         this(BasicAllocator.HEAP_SIZE_DEFAULT, 1, roots, debugMode);
     }
 
+    public void setDebugMode(DebugMode mode) {
+        debugMode = mode;
+    }
+
     /**
      * @return the current space (in heap words) marked as allocated in the heap
      */
@@ -147,7 +151,8 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         printTreadmill("before allocation", DebugMode.VERBOSE);
         // scan if necessary
         if (++currentScan >= scanFrequency) {
-            scan();
+            if (anyOfType(GREY))
+                scan(getFront(GREY));
             currentScan = 0;
         }
         // flip if there are no more free slots
@@ -196,14 +201,13 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
      * Scan a grey node, if any exist.
      * @throws AllocationException
      */
-    private void scan() throws AllocationException {
+    private void scan(GCNode<? super EpiscopalObject> node) throws AllocationException {
         try {
-            if (!anyOfType(GREY))
+            if (node.type() != GREY)
                 return;
-            GCNode<? super EpiscopalObject> toScan = getFront(GREY);
-            printTreadmill("starting scan for " + treadmillNodeRepresentation(toScan), DebugMode.VERBOSE);
+            printTreadmill("starting scan for " + treadmillNodeRepresentation(node), DebugMode.VERBOSE);
             // for each reachable object in the node to scan
-            for (ReferenceProperty reference : toScan.data.getInstance().reachableReferences()) {
+            for (ReferenceProperty reference : node.data.getInstance().reachableReferences()) {
                 // if the reference is null, don't follow it
                 if (reference.getInstance() == null || ((EpiscopalObject)reference.getInstance()).getGCNode() == null)
                     continue;
@@ -212,10 +216,12 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
                 // if the node of the pointed-to value is an ECRU node, make it grey
                 if (referenceNode.type() == NodeType.ECRU) {
                     make(referenceNode, GREY);
+                    // scan the reference node's references as well
+                    scan(referenceNode);
                 }
             }
-            make(toScan, BLACK);
-            printTreadmill("finished scan for " + treadmillNodeRepresentation(toScan), DebugMode.NORMAL);
+            make(node, BLACK);
+            printTreadmill("finished scan for " + treadmillNodeRepresentation(node), DebugMode.NORMAL);
         } catch (PropertyAccessException e) {
             throw new AllocationException(e);
         }
@@ -236,14 +242,15 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         try {
             printTreadmill("starting flip", DebugMode.VERBOSE);
             while (anyOfType(GREY))
-                scan();
+                scan(getFront(GREY));
             // turn all ecru nodes into white nodes (freeing their linked data)
             GCNode<? super EpiscopalObject> node = getFront(ECRU);
             while (node != null && node.type() == NodeType.ECRU) {
                 heapAllocator.free(node.data.getInstance());
                 node.data.setInstance(null);
+                GCNode<? super EpiscopalObject> next = node.next.getInstance();
                 make(node, NodeType.WHITE);
-                node = node.next.getInstance();
+                node = next;
             }
             printTreadmill("turn ecru into white", DebugMode.VERBOSE);
             if (isHeapFull()) {
@@ -382,12 +389,10 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
      * @param node the node which has just been added
      * @throws PropertyAccessException
      */
-    private void reassignPointers(GCNode<? super EpiscopalObject> node) throws PropertyAccessException {
+    private void reassignFronts(GCNode<? super EpiscopalObject> node) throws PropertyAccessException {
         // scenario: the given node has just been inserted to the right of a treadmill pointer
-        // only one element in the doubly-linked list
-        if (node == node.next.getInstance())
-            return;
-        if (getFront(node.type()) == null || getFront(node.type()).type() != node.type())
+        // the front for the node's colour should be it!
+        if (node == node.next.getInstance() || getFront(node.type()) == null || getFront(node.type()).type() != node.type())
             setFront(node.type(), node);
     }
 
@@ -456,7 +461,7 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
     private void make(GCNode<? super EpiscopalObject> node, NodeType colour) throws PropertyAccessException {
         insertPrev(insertionPoint(colour), node);
         node.setType(colour);
-        reassignPointers(node);
+        reassignFronts(node);
     }
 
     //******** NODE HELPERS ********//
@@ -506,11 +511,11 @@ public class TreadmillAllocator implements Allocator<EpiscopalObject> {
         // remove the front if it is associated with this
         if (getFront(colour) == node)
             setFront(colour, null);
-        // set the front if the neighbour matches it
+        // set the front if the neighbour matches it (and isn't this node)
         if (getFront(colour) == null) {
-            if (node.prev.getInstance() != null && node.prev.getInstance().type() == colour) {
+            if (node.prev.getInstance() != null && node.prev.getInstance() != node && node.prev.getInstance().type() == colour) {
                 setFront(colour, node.prev.getInstance());
-            } else if (node.next.getInstance() != null && node.next.getInstance().type() == colour) {
+            } else if (node.next.getInstance() != null && node.next.getInstance() != node && node.next.getInstance().type() == colour) {
                 setFront(colour, node.next.getInstance());
             }
         }
